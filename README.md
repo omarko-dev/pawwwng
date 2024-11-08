@@ -26,7 +26,7 @@ Welcome to the Cat Ping Pong Game! This is a fun and interactive ping pong game 
 
 ## Demo
 
-Check out the live demo of the game [here](https://omarko-dev.github.io/pawwng).
+Check out the live demo of the game [here](https://omarko-dev.github.io/pawwwng).
 
 ---
 
