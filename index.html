@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cat Ping Pong Game</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: url('assets/game-background.png') no-repeat center center;
+            background-size: cover;
+            font-family: 'Comic Neue', cursive;
+        }
+        #gameContainer {
+            position: relative;
+            width: 600px; /* Set to a perfect square */
+            height: 600px; /* Set to a perfect square */
+            border: 10px solid #ff7193; /* Thicker outline with color #ff7193 */
+            box-shadow: 0 0 0 5px black; /* Black outline */
+        }
+        #playingBackground {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('assets/playing-background.png') no-repeat center center;
+            background-size: cover;
+        }
+        #gradientOverlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 150px; /* Height of the gradient */
+            background: linear-gradient(to top, #ff7193, transparent);
+            opacity: 0.3; /* Light touch */
+        }
+        #gameCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        #score {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            color: white;
+            text-shadow: 2px 2px 0 #ff7193, -2px -2px 0 #ff7193, 2px -2px 0 #ff7193, -2px 2px 0 #ff7193;
+        }
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            color: red;
+            display: none;
+            animation: fadeIn 1s ease-in-out;
+        }
+        #leftInstructions, #rightInstructions {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 10px;
+            animation: fadeOut 1s ease-in-out forwards;
+            animation-delay: 3s; /* Delay before starting the fade-out animation */
+        }
+        #leftInstructions {
+            left: -250px; /* Position to the left of the game container */
+        }
+        #rightInstructions {
+            right: -250px; /* Position to the right of the game container */
+        }
+        #musicToggle {
+            position: fixed; /* Fixed position to place it at the bottom right corner of the website */
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background-color: #f6cddd;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        #musicToggle img {
+            width: 30px;
+            height: 30px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="playingBackground"></div>
+        <div id="gradientOverlay"></div>
+        <canvas id="gameCanvas" width="600" height="600"></canvas>
+        <div id="score">Score: 0</div>
+        <div id="gameOver">Game Over</div>
+        <div id="leftInstructions">Use A and D to move the left hand</div>
+        <div id="rightInstructions">Use Left Arrow and Right Arrow to move the right hand</div>
+    </div>
+    <div id="musicToggle">
+        <img id="musicIcon" src="assets/no-volume.png" alt="Toggle Music">
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
