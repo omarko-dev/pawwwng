@@ -202,7 +202,7 @@ document.addEventListener('keydown', (e) => {
 
 musicToggleElement.addEventListener('click', () => {
     if (backgroundMusic.paused) {
-        backgroundMusic.play();
+        backgroundMusic.play().catch(error => console.error('Error playing background music:', error));
         musicIconElement.src = 'assets/volume.png';
     } else {
         backgroundMusic.pause();
