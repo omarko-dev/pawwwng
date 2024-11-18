@@ -38,8 +38,8 @@
             left: 0;
             width: 100%;
             height: 150px; /* Height of the gradient */
-            background: linear-gradient(to top, #ff7193, transparent);
-            opacity: 0.3; /* Light touch */
+            background: linear-gradient(to top, rgba(255, 113, 147, 0.6), transparent); /* Darker gradient */
+            opacity: 0.5; /* Darker touch */
         }
         #gameCanvas {
             position: absolute;
@@ -63,6 +63,16 @@
             left: 50%;
             transform: translate(-50%, -50%);
             font-size: 48px;
+            color: red;
+            display: none;
+            animation: fadeIn 1s ease-in-out;
+        }
+        #bestScore {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
             color: red;
             display: none;
             animation: fadeIn 1s ease-in-out;
@@ -119,6 +129,7 @@
         <canvas id="gameCanvas" width="600" height="600"></canvas>
         <div id="score">Score: 0</div>
         <div id="gameOver">Game Over</div>
+        <div id="bestScore">Best Score: 0</div>
         <div id="leftInstructions">Use A and D to move the left hand</div>
         <div id="rightInstructions">Use Left Arrow and Right Arrow to move the right hand</div>
     </div>
