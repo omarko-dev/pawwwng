@@ -2,12 +2,14 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const scoreElement = document.getElementById('score');
 const gameOverElement = document.getElementById('gameOver');
+const bestScoreElement = document.getElementById('bestScore');
 const leftInstructionsElement = document.getElementById('leftInstructions');
 const rightInstructionsElement = document.getElementById('rightInstructions');
 const musicToggleElement = document.getElementById('musicToggle');
 const musicIconElement = document.getElementById('musicIcon');
 
 let score = 0;
+let bestScore = 0;
 let gameOver = false;
 let ballHit = false; // Flag to track ball collision with pawns
 let gameStarted = false; // Flag to track if the game has started
@@ -15,7 +17,7 @@ let gameStarted = false; // Flag to track if the game has started
 const ball = {
     x: canvas.width / 2,
     y: canvas.height / 2,
-    radius: 40, // Increased the radius of the ball
+    radius: 30, // Reduced the radius of the ball
     dx: 2, // Reduced initial speed
     dy: -2, // Reduced initial speed
     image: new Image(),
@@ -23,19 +25,19 @@ const ball = {
 };
 
 const leftHand = {
-    x: canvas.width / 4 - 65, // Adjusted to ensure the whole arm is visible
-    y: canvas.height - 180, // Stick to the bottom and stretch upwards
-    width: 130, // Adjusted the width of the hand
-    height: 180, // Adjusted the height of the hand
+    x: canvas.width / 4 - 50, // Adjusted to ensure the whole arm is visible
+    y: canvas.height - 150, // Stick to the bottom and stretch upwards
+    width: 100, // Adjusted the width of the hand
+    height: 150, // Adjusted the height of the hand
     dx: 0,
     image: new Image()
 };
 
 const rightHand = {
-    x: (canvas.width / 4) * 3 - 65, // Adjusted to ensure the whole arm is visible
-    y: canvas.height - 180, // Stick to the bottom and stretch upwards
-    width: 130, // Adjusted the width of the hand
-    height: 180, // Adjusted the height of the hand
+    x: (canvas.width / 4) * 3 - 50, // Adjusted to ensure the whole arm is visible
+    y: canvas.height - 150, // Stick to the bottom and stretch upwards
+    width: 100, // Adjusted the width of the hand
+    height: 150, // Adjusted the height of the hand
     dx: 0,
     image: new Image()
 };
@@ -50,6 +52,8 @@ const acceleration = 1.5; // Lowered acceleration for smoother gameplay
 const hitSound = new Audio('assets/sound-effect.mp3'); // Load the sound effect
 const backgroundMusic = new Audio('assets/background-music.mp3'); // Load the background music
 backgroundMusic.loop = true; // Loop the background music
+const gameOverSound = new Audio('assets/cat-soundeffect.mp3'); // Load the game over sound effect
+gameOverSound.volume = 0.05; // Lower the volume of the game over sound effect
 
 function drawBall() {
     if (ball.visible) {
@@ -84,10 +88,10 @@ function moveBall() {
     }
 
     // Check collision with left hand
-    if (ball.x > leftHand.x && ball.x < leftHand.x + leftHand.width && ball.y + ball.radius > leftHand.y && !ballHit) {
+    if (ball.x + ball.radius > leftHand.x + 20 && ball.x - ball.radius < leftHand.x + leftHand.width - 20 && ball.y + ball.radius > leftHand.y + 20 && ball.y - ball.radius < leftHand.y + leftHand.height - 10 && !ballHit) {
         ball.dy = -ball.dy;
-        ball.dy *= 1.02; // Slightly increase speed to make the game harder
-        ball.dx *= 1.02; // Slightly increase speed to make the game harder
+        ball.dy *= 1.1; // Increase speed more significantly to make the game harder
+        ball.dx *= 1.1; // Increase speed more significantly to make the game harder
         score++;
         updateScore();
         ballHit = true; // Set the flag to true when the ball hits a pawn
@@ -95,10 +99,10 @@ function moveBall() {
     }
 
     // Check collision with right hand
-    if (ball.x > rightHand.x && ball.x < rightHand.x + rightHand.width && ball.y + ball.radius > rightHand.y && !ballHit) {
+    if (ball.x + ball.radius > rightHand.x + 20 && ball.x - ball.radius < rightHand.x + rightHand.width - 20 && ball.y + ball.radius > rightHand.y + 20 && ball.y - ball.radius < rightHand.y + rightHand.height - 10 && !ballHit) {
         ball.dy = -ball.dy;
-        ball.dy *= 1.02; // Slightly increase speed to make the game harder
-        ball.dx *= 1.02; // Slightly increase speed to make the game harder
+        ball.dy *= 1.1; // Increase speed more significantly to make the game harder
+        ball.dx *= 1.1; // Increase speed more significantly to make the game harder
         score++;
         updateScore();
         ballHit = true; // Set the flag to true when the ball hits a pawn
@@ -138,6 +142,12 @@ function updateScore() {
 function endGame() {
     gameOver = true;
     gameOverElement.style.display = 'block';
+    if (score > bestScore) {
+        bestScore = score;
+    }
+    bestScoreElement.textContent = `Best Score: ${bestScore}`;
+    bestScoreElement.style.display = 'block';
+    gameOverSound.play(); // Play game over sound effect
     setTimeout(() => {
         document.addEventListener('keydown', restartGame, { once: true });
     }, 1000);
@@ -153,6 +163,7 @@ function restartGame() {
     ball.visible = false; // Make the ball invisible again
     gameOver = false;
     gameOverElement.style.display = 'none';
+    bestScoreElement.style.display = 'none';
     gameStarted = false; // Reset game started flag
     update();
 }
