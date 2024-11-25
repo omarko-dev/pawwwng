@@ -1,3 +1,27 @@
+// Constants and Configuration
+const CANVAS_WIDTH = 600;
+const CANVAS_HEIGHT = 600;
+const BALL_RADIUS = 30;
+const HAND_WIDTH = 100;
+const HAND_HEIGHT = 150;
+const HAND_FRICTION = 0.95; // Adjusted friction for smoother deceleration
+const HAND_ACCELERATION = 3.0; // Adjusted acceleration for smoother movement
+const HAND_MAX_SPEED = 10; // Cap the maximum speed for hands
+const BALL_INITIAL_SPEED = 2;
+const BALL_SPEED_INCREMENT = 1.05; // Reduced speed increment for gradual difficulty increase
+const MESSAGE_DISPLAY_TIME = 3000;
+const MESSAGE_FADE_OUT_TIME = 2000;
+const GAME_OVER_DELAY = 1000;
+const GAME_OVER_SOUND_VOLUME = 0.05;
+const PAUSE_KEY = 'p';
+const RESUME_KEY = 'r';
+const DIFFICULTY_LEVELS = {
+    easy: { ballSpeed: 2, handSpeed: 2 },
+    medium: { ballSpeed: 3, handSpeed: 3 },
+    hard: { ballSpeed: 4, handSpeed: 4 }
+};
+
+// Game Elements
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const scoreElement = document.getElementById('score');
@@ -7,54 +31,61 @@ const leftInstructionsElement = document.getElementById('leftInstructions');
 const rightInstructionsElement = document.getElementById('rightInstructions');
 const musicToggleElement = document.getElementById('musicToggle');
 const musicIconElement = document.getElementById('musicIcon');
+const musicMessageElement = document.getElementById('musicMessage');
+const pauseMessageElement = document.getElementById('pauseMessage');
 
+// Game State
 let score = 0;
 let bestScore = 0;
 let gameOver = false;
-let ballHit = false; // Flag to track ball collision with pawns
-let gameStarted = false; // Flag to track if the game has started
+let ballHit = false;
+let gameStarted = false;
+let gamePaused = false;
+let currentDifficulty = DIFFICULTY_LEVELS.medium;
 
+// Ball Object
 const ball = {
-    x: canvas.width / 2,
-    y: canvas.height / 2,
-    radius: 30, // Reduced the radius of the ball
-    dx: 2, // Reduced initial speed
-    dy: -2, // Reduced initial speed
+    x: CANVAS_WIDTH / 2,
+    y: CANVAS_HEIGHT / 2,
+    radius: BALL_RADIUS,
+    dx: BALL_INITIAL_SPEED,
+    dy: -BALL_INITIAL_SPEED,
     image: new Image(),
-    visible: false // Ball is initially invisible
+    visible: false
 };
 
+// Hand Objects
 const leftHand = {
-    x: canvas.width / 4 - 50, // Adjusted to ensure the whole arm is visible
-    y: canvas.height - 150, // Stick to the bottom and stretch upwards
-    width: 100, // Adjusted the width of the hand
-    height: 150, // Adjusted the height of the hand
+    x: CANVAS_WIDTH / 4 - HAND_WIDTH / 2,
+    y: CANVAS_HEIGHT - HAND_HEIGHT,
+    width: HAND_WIDTH,
+    height: HAND_HEIGHT,
     dx: 0,
     image: new Image()
 };
 
 const rightHand = {
-    x: (canvas.width / 4) * 3 - 50, // Adjusted to ensure the whole arm is visible
-    y: canvas.height - 150, // Stick to the bottom and stretch upwards
-    width: 100, // Adjusted the width of the hand
-    height: 150, // Adjusted the height of the hand
+    x: (CANVAS_WIDTH / 4) * 3 - HAND_WIDTH / 2,
+    y: CANVAS_HEIGHT - HAND_HEIGHT,
+    width: HAND_WIDTH,
+    height: HAND_HEIGHT,
     dx: 0,
     image: new Image()
 };
 
+// Load Images
 ball.image.src = 'assets/ball.png';
 leftHand.image.src = 'assets/Left-Hand.png';
 rightHand.image.src = 'assets/Right-Hand.png';
 
-const friction = 0.98; // Lowered friction for smoother gameplay
-const acceleration = 1.5; // Lowered acceleration for smoother gameplay
+// Load Sounds
+const hitSound = new Audio('assets/sound-effect.mp3');
+const backgroundMusic = new Audio('assets/background-music.mp3');
+backgroundMusic.loop = true;
+const gameOverSound = new Audio('assets/cat-soundeffect.mp3');
+gameOverSound.volume = GAME_OVER_SOUND_VOLUME;
 
-const hitSound = new Audio('assets/sound-effect.mp3'); // Load the sound effect
-const backgroundMusic = new Audio('assets/background-music.mp3'); // Load the background music
-backgroundMusic.loop = true; // Loop the background music
-const gameOverSound = new Audio('assets/cat-soundeffect.mp3'); // Load the game over sound effect
-gameOverSound.volume = 0.05; // Lower the volume of the game over sound effect
-
+// Drawing Functions
 function drawBall() {
     if (ball.visible) {
         ctx.drawImage(ball.image, ball.x - ball.radius, ball.y - ball.radius, ball.radius * 2, ball.radius * 2);
@@ -63,54 +94,47 @@ function drawBall() {
 
 function drawHand(hand) {
     ctx.drawImage(hand.image, hand.x, hand.y, hand.width, hand.height);
-    // Draw a circle on top of the hand for collision detection
     ctx.beginPath();
     ctx.arc(hand.x + hand.width / 2, hand.y, hand.width / 2, 0, Math.PI * 2);
     ctx.closePath();
 }
 
+// Movement Functions
 function moveBall() {
     ball.x += ball.dx;
     ball.y += ball.dy;
 
-    if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
+    if (ball.x + ball.radius > CANVAS_WIDTH || ball.x - ball.radius < 0) {
         ball.dx = -ball.dx;
-        hitSound.play(); // Play sound effect
+        hitSound.play();
     }
 
     if (ball.y - ball.radius < 0) {
         ball.dy = -ball.dy;
-        hitSound.play(); // Play sound effect
+        hitSound.play();
     }
 
-    if (ball.y + ball.radius > canvas.height - 50) { // End the game when the ball is close to the bottom
+    if (ball.y + ball.radius > CANVAS_HEIGHT - 50) {
         endGame();
     }
 
-    // Check collision with left hand
-    if (ball.x + ball.radius > leftHand.x + 20 && ball.x - ball.radius < leftHand.x + leftHand.width - 20 && ball.y + ball.radius > leftHand.y + 20 && ball.y - ball.radius < leftHand.y + leftHand.height - 10 && !ballHit) {
+    checkCollisionWithHand(leftHand);
+    checkCollisionWithHand(rightHand);
+}
+
+function checkCollisionWithHand(hand) {
+    if (ball.x + ball.radius > hand.x + 20 && ball.x - ball.radius < hand.x + hand.width - 20 &&
+        ball.y + ball.radius > hand.y + 20 && ball.y - ball.radius < hand.y + hand.height - 10 && !ballHit) {
         ball.dy = -ball.dy;
-        ball.dy *= 1.1; // Increase speed more significantly to make the game harder
-        ball.dx *= 1.1; // Increase speed more significantly to make the game harder
+        ball.dy *= BALL_SPEED_INCREMENT;
+        ball.dx *= BALL_SPEED_INCREMENT;
         score++;
         updateScore();
-        ballHit = true; // Set the flag to true when the ball hits a pawn
-        hitSound.play(); // Play sound effect
+        ballHit = true;
+        hitSound.play();
     }
 
-    // Check collision with right hand
-    if (ball.x + ball.radius > rightHand.x + 20 && ball.x - ball.radius < rightHand.x + rightHand.width - 20 && ball.y + ball.radius > rightHand.y + 20 && ball.y - ball.radius < rightHand.y + rightHand.height - 10 && !ballHit) {
-        ball.dy = -ball.dy;
-        ball.dy *= 1.1; // Increase speed more significantly to make the game harder
-        ball.dx *= 1.1; // Increase speed more significantly to make the game harder
-        score++;
-        updateScore();
-        ballHit = true; // Set the flag to true when the ball hits a pawn
-        hitSound.play(); // Play sound effect
-    }
-
-    // Reset the ballHit flag when the ball moves away from the pawns
-    if (ball.y + ball.radius < leftHand.y || ball.y + ball.radius < rightHand.y) {
+    if (ball.y + ball.radius < hand.y) {
         ballHit = false;
     }
 }
@@ -119,13 +143,24 @@ function moveHands() {
     leftHand.x += leftHand.dx;
     rightHand.x += rightHand.dx;
 
-    leftHand.dx *= friction;
-    rightHand.dx *= friction;
+    leftHand.dx *= HAND_FRICTION;
+    rightHand.dx *= HAND_FRICTION;
 
+    // Cap the maximum speed for hands
+    if (leftHand.dx > HAND_MAX_SPEED) leftHand.dx = HAND_MAX_SPEED;
+    if (leftHand.dx < -HAND_MAX_SPEED) leftHand.dx = -HAND_MAX_SPEED;
+    if (rightHand.dx > HAND_MAX_SPEED) rightHand.dx = HAND_MAX_SPEED;
+    if (rightHand.dx < -HAND_MAX_SPEED) rightHand.dx = -HAND_MAX_SPEED;
+
+    constrainHands();
+}
+
+function constrainHands() {
     if (leftHand.x < 0) leftHand.x = 0;
+    if (leftHand.x + leftHand.width > CANVAS_WIDTH) leftHand.x = CANVAS_WIDTH - leftHand.width;
+
     if (rightHand.x < 0) rightHand.x = 0;
-    if (leftHand.x + leftHand.width > canvas.width) leftHand.x = canvas.width - leftHand.width;
-    if (rightHand.x + rightHand.width > canvas.width) rightHand.x = canvas.width - rightHand.width;
+    if (rightHand.x + rightHand.width > CANVAS_WIDTH) rightHand.x = CANVAS_WIDTH - rightHand.width;
 
     if (leftHand.x + leftHand.width > rightHand.x) {
         leftHand.x = rightHand.x - leftHand.width;
@@ -135,6 +170,7 @@ function moveHands() {
     }
 }
 
+// Game Logic
 function updateScore() {
     scoreElement.textContent = `Score: ${score}`;
 }
@@ -147,30 +183,30 @@ function endGame() {
     }
     bestScoreElement.textContent = `Best Score: ${bestScore}`;
     bestScoreElement.style.display = 'block';
-    gameOverSound.play(); // Play game over sound effect
+    gameOverSound.play();
     setTimeout(() => {
         document.addEventListener('keydown', restartGame, { once: true });
-    }, 1000);
+    }, GAME_OVER_DELAY);
 }
 
 function restartGame() {
     score = 0;
     updateScore();
-    ball.x = canvas.width / 2;
-    ball.y = canvas.height / 2;
-    ball.dx = 2; // Reset initial speed
-    ball.dy = -2; // Reset initial speed
-    ball.visible = false; // Make the ball invisible again
+    ball.x = CANVAS_WIDTH / 2;
+    ball.y = CANVAS_HEIGHT / 2;
+    ball.dx = BALL_INITIAL_SPEED;
+    ball.dy = -BALL_INITIAL_SPEED;
+    ball.visible = false;
     gameOver = false;
     gameOverElement.style.display = 'none';
     bestScoreElement.style.display = 'none';
-    gameStarted = false; // Reset game started flag
+    gameStarted = false;
     update();
 }
 
 function update() {
-    if (gameOver) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (gameOver || gamePaused) return;
+    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     drawBall();
     drawHand(leftHand);
     drawHand(rightHand);
@@ -181,22 +217,30 @@ function update() {
     requestAnimationFrame(update);
 }
 
+// Event Listeners
 document.addEventListener('keydown', (e) => {
     if (!gameStarted) {
         gameStarted = true;
-        ball.visible = true; // Make the ball visible when the game starts
-        leftInstructionsElement.style.display = 'none'; // Hide left instructions when the game starts
-        rightInstructionsElement.style.display = 'none'; // Hide right instructions when the game starts
-        update(); // Start the game loop
+        ball.visible = true;
+        leftInstructionsElement.style.display = 'none';
+        rightInstructionsElement.style.display = 'none';
+        update();
     }
     if (e.key === 'ArrowLeft') {
-        rightHand.dx -= acceleration;
+        rightHand.dx -= HAND_ACCELERATION;
     } else if (e.key === 'ArrowRight') {
-        rightHand.dx += acceleration;
-    } else if (e.key === 'a') {
-        leftHand.dx -= acceleration;
-    } else if (e.key === 'd') {
-        leftHand.dx += acceleration;
+        rightHand.dx += HAND_ACCELERATION;
+    } else if (e.key === 'a' || e.key === 'A') {
+        leftHand.dx -= HAND_ACCELERATION;
+    } else if (e.key === 'd' || e.key === 'D') {
+        leftHand.dx += HAND_ACCELERATION;
+    } else if (e.key === PAUSE_KEY) {
+        gamePaused = true;
+        pauseMessageElement.style.display = 'block';
+    } else if (e.key === RESUME_KEY) {
+        gamePaused = false;
+        pauseMessageElement.style.display = 'none';
+        update();
     }
 });
 
@@ -209,5 +253,11 @@ musicToggleElement.addEventListener('click', () => {
         musicIconElement.src = 'assets/no-volume.png';
     }
 });
+
+// Show the music message and hide it after a few seconds with animation
+musicMessageElement.style.display = 'block';
+setTimeout(() => {
+    musicMessageElement.style.animation = 'fadeOutMessage 2s ease-in-out forwards';
+}, MESSAGE_DISPLAY_TIME);
 
 update();
