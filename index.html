@@ -112,6 +112,18 @@
             width: 30px;
             height: 30px;
         }
+        #musicMessage {
+            position: fixed;
+            bottom: 80px; /* Position above the music button */
+            right: 20px;
+            background-color: #ff7193; /* Matching the game palette */
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            display: none;
+            animation: fadeOutMessage 5s ease-in-out forwards;
+        }
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -119,6 +131,11 @@
         @keyframes fadeOut {
             from { opacity: 1; }
             to { opacity: 0; }
+        }
+        @keyframes fadeOutMessage {
+            0% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; }
         }
     </style>
 </head>
@@ -136,6 +153,7 @@
     <div id="musicToggle">
         <img id="musicIcon" src="assets/no-volume.png" alt="Toggle Music">
     </div>
+    <div id="musicMessage">There are cute songs in here!</div>
     <script src="game.js"></script>
 </body>
 </html>
