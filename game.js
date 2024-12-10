@@ -4,11 +4,11 @@ const CANVAS_HEIGHT = 600;
 const BALL_RADIUS = 30;
 const HAND_WIDTH = 100;
 const HAND_HEIGHT = 150;
-const HAND_FRICTION = 0.95; // Adjusted friction for smoother deceleration
-const HAND_ACCELERATION = 3.0; // Adjusted acceleration for smoother movement
-const HAND_MAX_SPEED = 10; // Cap the maximum speed for hands
+const HAND_FRICTION = 0.95;
+const HAND_ACCELERATION = 3.0;
+const HAND_MAX_SPEED = 10;
 const BALL_INITIAL_SPEED = 2;
-const BALL_SPEED_INCREMENT = 1.05; // Reduced speed increment for gradual difficulty increase
+const BALL_SPEED_INCREMENT = 1.05;
 const MESSAGE_DISPLAY_TIME = 3000;
 const MESSAGE_FADE_OUT_TIME = 2000;
 const GAME_OVER_DELAY = 1000;
@@ -32,7 +32,6 @@ const rightInstructionsElement = document.getElementById('rightInstructions');
 const musicToggleElement = document.getElementById('musicToggle');
 const musicIconElement = document.getElementById('musicIcon');
 const musicMessageElement = document.getElementById('musicMessage');
-const pauseMessageElement = document.getElementById('pauseMessage');
 
 // Game State
 let score = 0;
@@ -94,9 +93,6 @@ function drawBall() {
 
 function drawHand(hand) {
     ctx.drawImage(hand.image, hand.x, hand.y, hand.width, hand.height);
-    ctx.beginPath();
-    ctx.arc(hand.x + hand.width / 2, hand.y, hand.width / 2, 0, Math.PI * 2);
-    ctx.closePath();
 }
 
 // Movement Functions
@@ -146,7 +142,6 @@ function moveHands() {
     leftHand.dx *= HAND_FRICTION;
     rightHand.dx *= HAND_FRICTION;
 
-    // Cap the maximum speed for hands
     if (leftHand.dx > HAND_MAX_SPEED) leftHand.dx = HAND_MAX_SPEED;
     if (leftHand.dx < -HAND_MAX_SPEED) leftHand.dx = -HAND_MAX_SPEED;
     if (rightHand.dx > HAND_MAX_SPEED) rightHand.dx = HAND_MAX_SPEED;
@@ -170,7 +165,6 @@ function constrainHands() {
     }
 }
 
-// Game Logic
 function updateScore() {
     scoreElement.textContent = `Score: ${score}`;
 }
@@ -217,7 +211,6 @@ function update() {
     requestAnimationFrame(update);
 }
 
-// Event Listeners
 document.addEventListener('keydown', (e) => {
     if (!gameStarted) {
         gameStarted = true;
@@ -236,12 +229,54 @@ document.addEventListener('keydown', (e) => {
         leftHand.dx += HAND_ACCELERATION;
     } else if (e.key === PAUSE_KEY) {
         gamePaused = true;
-        pauseMessageElement.style.display = 'block';
     } else if (e.key === RESUME_KEY) {
         gamePaused = false;
-        pauseMessageElement.style.display = 'none';
         update();
     }
+});
+
+leftHandLeftButton.addEventListener('touchstart', () => {
+    if (!gameStarted) {
+        gameStarted = true;
+        ball.visible = true;
+        leftInstructionsElement.style.display = 'none';
+        rightInstructionsElement.style.display = 'none';
+        update();
+    }
+    leftHand.dx -= HAND_ACCELERATION;
+});
+
+leftHandRightButton.addEventListener('touchstart', () => {
+    if (!gameStarted) {
+        gameStarted = true;
+        ball.visible = true;
+        leftInstructionsElement.style.display = 'none';
+        rightInstructionsElement.style.display = 'none';
+        update();
+    }
+    leftHand.dx += HAND_ACCELERATION;
+});
+
+rightHandLeftButton.addEventListener('touchstart', () => {
+    if (!gameStarted) {
+        gameStarted = true;
+        ball.visible = true;
+        leftInstructionsElement.style.display = 'none';
+        rightInstructionsElement.style.display = 'none';
+        update();
+    }
+    rightHand.dx -= HAND_ACCELERATION;
+});
+
+rightHandRightButton.addEventListener('touchstart', () => {
+    if (!gameStarted) {
+        gameStarted = true;
+        ball.visible = true;
+        leftInstructionsElement.style.display = 'none';
+        rightInstructionsElement.style.display = 'none';
+        update();
+    }
+    rightHand.dx += HAND_ACCELERATION;
 });
 
 musicToggleElement.addEventListener('click', () => {
@@ -254,7 +289,6 @@ musicToggleElement.addEventListener('click', () => {
     }
 });
 
-// Show the music message and hide it after a few seconds with animation
 musicMessageElement.style.display = 'block';
 setTimeout(() => {
     musicMessageElement.style.animation = 'fadeOutMessage 2s ease-in-out forwards';
